@@ -6,7 +6,9 @@ use std::{
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use serde::{Deserialize, Serialize};
+use clipboard::{ClipboardContext, ClipboardProvider};
+use serde_json::json;
+use trlt::Config;
 
 /// The translator CLI (trlt) is a command-line tool to translate text using the OpenAI API.
 ///
@@ -49,33 +51,11 @@ enum Command {
     },
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Config {
-    api_key: String,
-    model: String,
-}
-
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
     match cli.command {
-        Command::Init { api_key, model } => {
-            let mut api_key_value = "".to_string();
-            if api_key.is_none() {
-                println!("Provide the OpenAI API key: ");
-                io::stdin()
-                    .read_line(&mut api_key_value)
-                    .expect("Failed to read from stdin");
-            } else {
-                api_key_value = api_key.unwrap();
-            }
-
-            let config = Config {
-                api_key: api_key_value.trim().to_string(),
-                model,
-            };
-            init(&config).unwrap();
-        }
+        Command::Init { api_key, model } => init(api_key, model),
         Command::Translate {
             input,
             output,
@@ -100,16 +80,15 @@ async fn main() {
     }
 }
 
-fn init(config: &Config) -> Result<()> {
-    let mut api_key = config.api_key.clone();
-    let model = config.model.clone();
-    if api_key.is_empty() {
-        println!("Provide the OpenAI API key: ");
-        io::stdin().read_to_string(&mut api_key)?;
-    }
-    write_config(&Config { api_key, model })?;
-    println!("Config file created successfully in $HOME/.config/trlt.toml");
-    Ok(())
+fn init(api_key: Option<String>, model: String) {
+    let config = Config::new(api_key, model).unwrap();
+
+    config.write_to_file().unwrap();
+
+    println!(
+        "Config file created successfully in {}",
+        Config::config_path().display()
+    );
 }
 
 async fn translate(
@@ -118,7 +97,7 @@ async fn translate(
     from: &Option<String>,
     to: &str,
 ) -> Result<()> {
-    let config = read_config().expect("Failed to read config file. Please run `trlt init --help` to help you create a config file.");
+    let config = Config::read_from_file().expect("Failed to read config file. Please run `trlt init --help` to help you create a config file.");
     let client = reqwest::Client::new();
 
     let prompt = if let Some(from_lang) = from {
@@ -130,7 +109,7 @@ async fn translate(
     let response = client
         .post("https://api.openai.com/v1/chat/completions")
         .header("Authorization", format!("Bearer {}", config.api_key))
-        .json(&serde_json::json!({
+        .json(&json!({
             "model": config.model,
             "messages": [{
                 "role": "system",
@@ -165,26 +144,18 @@ async fn translate(
 
     if let Some(output_path) = output {
         let path = Path::new(output_path);
-        fs::write(path, response_text)?;
+        fs::write(path, response_text.clone())?;
     } else {
         println!("{}", response_text);
     }
 
-    Ok(())
-}
+    if let Ok(mut ctx) = ClipboardContext::new() {
+        if let Err(e) = ctx.set_contents(response_text.to_string()) {
+            eprintln!("Failed to copy to clipboard: {:?}", e);
+        } else {
+            println!("\nOutput copied to clipboard.");
+        }
+    }
 
-fn read_config() -> Result<Config> {
-    let config_path = dirs::config_dir()
-        .ok_or_else(|| anyhow::anyhow!("Failed to get config directory"))?
-        .join("trlt.toml");
-    let config: Config = toml::from_str(&fs::read_to_string(config_path)?)?;
-    Ok(config)
-}
-
-fn write_config(config: &Config) -> Result<()> {
-    let config_path = dirs::config_dir()
-        .ok_or_else(|| anyhow::anyhow!("Failed to get config directory"))?
-        .join("trlt.toml");
-    fs::write(config_path, toml::to_string_pretty(config)?)?;
     Ok(())
 }
