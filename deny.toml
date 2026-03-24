@@ -1,0 +1,58 @@
+[graph]
+targets = []
+all-features = false
+no-default-features = false
+
+[output]
+feature-depth = 1
+
+[advisories]
+ignore = [
+    { id = "RUSTSEC-2025-0119", reason = "number_prefix is unmaintained, transitive dep of indicatif, no fix available" },
+]
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "ISC",
+    "Unicode-3.0",
+    "BSL-1.0",
+    "BSD-3-Clause",
+    "MPL-2.0",
+    "Zlib",
+    "CDLA-Permissive-2.0",
+]
+confidence-threshold = 0.8
+exceptions = [
+    { allow = ["ISC", "MIT", "OpenSSL"], crate = "ring" },
+]
+
+[licenses.private]
+ignore = false
+registries = []
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+highlight = "all"
+workspace-default-features = "allow"
+external-default-features = "allow"
+allow = []
+allow-workspace = false
+deny = []
+skip = []
+skip-tree = [
+    { crate = "windows-sys", reason = "transitive duplicate from ring, console, arboard, and tokio — skip entire tree including windows-targets and platform crates" },
+]
+
+[sources]
+unknown-registry = "warn"
+unknown-git = "warn"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
+
+[sources.allow-org]
+github = []
+gitlab = []
+bitbucket = []

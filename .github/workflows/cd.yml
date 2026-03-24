@@ -1,0 +1,74 @@
+name: CD
+
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+
+      - name: Check
+        run: |
+          cargo fmt --check
+          cargo clippy -- -D warnings
+          cargo nextest run
+
+      - name: Install cocogitto
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cocogitto@7
+
+      - name: Configure git
+        run: |
+          git config user.name "trlt-bot"
+          git config user.email "trlt-bot@users.noreply.github.com"
+
+      - name: Bump version
+        id: bump
+        run: |
+          cog bump --auto
+          new_tag=$(git describe --tags --abbrev=0)
+          echo "tag=$new_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Push commits and tags
+        run: |
+          git push
+          git push --tags
+
+      - name: Generate release notes
+        env:
+          RELEASE_TAG: ${{ steps.bump.outputs.tag }}
+        run: cog changelog --at "$RELEASE_TAG" -t remote > RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.tag }}
+          body_path: RELEASE_NOTES.md
+
+      - name: Publish to crates.io
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
