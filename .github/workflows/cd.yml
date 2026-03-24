@@ -68,7 +68,10 @@ jobs:
           tag_name: ${{ steps.bump.outputs.tag }}
           body_path: RELEASE_NOTES.md
 
+      - name: Clean up release notes
+        run: rm -f RELEASE_NOTES.md
+
       - name: Publish to crates.io
-        run: cargo publish --allow-dirty
+        run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
