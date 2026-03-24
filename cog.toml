@@ -6,7 +6,7 @@ tag_prefix = "v"
 branch_whitelist = ["main"]
 skip_ci = "[skip ci]"
 skip_untracked = false
-scopes = ["deps", "version", "api", "cli", "config"]
+scopes = ["deps", "version", "api", "cli", "config", "ci"]
 
 pre_bump_hooks = [
     "cargo fmt --check",
