@@ -7,9 +7,7 @@ no-default-features = false
 feature-depth = 1
 
 [advisories]
-ignore = [
-    { id = "RUSTSEC-2025-0119", reason = "number_prefix is unmaintained, transitive dep of indicatif, no fix available" },
-]
+ignore = []
 
 [licenses]
 allow = [

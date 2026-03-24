@@ -157,27 +157,24 @@ impl Config {
     }
 
     pub fn set_value(&mut self, key: &str, value: &str) -> Result<()> {
-        let toml_str = toml::to_string(self)?;
-        let mut table: toml::Value = toml_str.parse()?;
+        let toml_str = toml::to_string_pretty(self)?;
+        let mut table: toml::Table = toml::from_str(&toml_str)?;
         let parts: Vec<&str> = key.split('.').collect();
         let mut current = &mut table;
 
         for (i, part) in parts.iter().enumerate() {
             if i == parts.len() - 1 {
-                current
-                    .as_table_mut()
-                    .context("config is not a table")?
-                    .insert(part.to_string(), toml::Value::String(value.to_string()));
+                current.insert(part.to_string(), toml::Value::String(value.to_string()));
             } else {
-                current = current
-                    .as_table_mut()
-                    .context("config is not a table")?
+                let entry = current
                     .entry(part.to_string())
-                    .or_insert(toml::Value::Table(toml::map::Map::new()));
+                    .or_insert(toml::Value::Table(toml::Table::new()));
+                current = entry.as_table_mut().context("config is not a table")?;
             }
         }
 
-        *self = table.try_into()?;
+        let new_toml_str = toml::to_string_pretty(&table)?;
+        *self = toml::from_str(&new_toml_str)?;
         Ok(())
     }
 
