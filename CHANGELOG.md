@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
 - - -
+## [v0.2.0](https://github.com/hvpaiva/trlt/compare/7af09a04d0be71b5ca5bfbec76a23a853af9092a..v0.2.0) - 2026-03-24
+#### Features
+- (**cli**) interactive setup wizard with commented config template - ([e14eae7](https://github.com/hvpaiva/trlt/commit/e14eae70846092262479a842ea9555b87cc6f1dc)) - Highlander Paiva
+#### Continuous Integration
+- clean up RELEASE_NOTES.md before cargo publish - ([7af09a0](https://github.com/hvpaiva/trlt/commit/7af09a04d0be71b5ca5bfbec76a23a853af9092a)) - Highlander Paiva
+
+- - -
+
 ## [v0.1.2](https://github.com/hvpaiva/trlt/compare/75c415b64142933a5489cdf808e3766906aadf5c..v0.1.2) - 2026-03-24
 #### Bug Fixes
 - (**version**) sync Cargo.toml to v0.1.1 and add version bump hook - ([75c415b](https://github.com/hvpaiva/trlt/commit/75c415b64142933a5489cdf808e3766906aadf5c)) - Highlander Paiva
