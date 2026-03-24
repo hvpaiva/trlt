@@ -12,6 +12,8 @@ pre_bump_hooks = [
     "cargo fmt --check",
     "cargo clippy -- -D warnings",
     "cargo nextest run",
+    "sed -i 's/^version = \".*\"/version = \"{{version}}\"/' Cargo.toml",
+    "cargo generate-lockfile",
 ]
 
 post_bump_hooks = []
