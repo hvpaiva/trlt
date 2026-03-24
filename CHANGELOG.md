@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
 - - -
+## [v0.1.2](https://github.com/hvpaiva/trlt/compare/75c415b64142933a5489cdf808e3766906aadf5c..v0.1.2) - 2026-03-24
+#### Bug Fixes
+- (**version**) sync Cargo.toml to v0.1.1 and add version bump hook - ([75c415b](https://github.com/hvpaiva/trlt/commit/75c415b64142933a5489cdf808e3766906aadf5c)) - Highlander Paiva
+
+- - -
+
 ## [v0.1.1](https://github.com/hvpaiva/trlt/compare/bf086df4fdd0481be8e7e17620b5c472b090d13f..v0.1.1) - 2026-03-24
 #### Bug Fixes
 - (**ci**) allow dirty working directory in cargo publish and add ci scope - ([bf086df](https://github.com/hvpaiva/trlt/commit/bf086df4fdd0481be8e7e17620b5c472b090d13f)) - Highlander Paiva
