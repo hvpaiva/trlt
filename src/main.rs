@@ -9,13 +9,17 @@ use trlt::cli::{Cli, Command, ConfigAction};
 use trlt::config::Config;
 use trlt::input::resolve_input;
 use trlt::translate::{self, TranslateOptions};
+use trlt::wizard;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Command::Init { provider } => cmd_init(&provider),
+        Command::Init => {
+            wizard::run_wizard()?;
+            Ok(())
+        }
         Command::Translate {
             input,
             output,
@@ -50,19 +54,6 @@ async fn main() -> Result<()> {
     }
 }
 
-fn cmd_init(provider: &str) -> Result<()> {
-    let config = Config {
-        provider: provider.to_string(),
-        default_target: "en".into(),
-        ..Default::default()
-    };
-    config.save()?;
-    let path = Config::config_path()?;
-    println!("Config created at {}", path.display());
-    println!("Edit it to add your API keys and provider settings.");
-    Ok(())
-}
-
 struct TranslateArgs {
     input: Option<String>,
     output: Option<String>,
@@ -75,7 +66,15 @@ struct TranslateArgs {
 }
 
 async fn cmd_translate(args: TranslateArgs) -> Result<()> {
-    let config = Config::load()?;
+    let config = match Config::load() {
+        Ok(c) => c,
+        Err(_) if wizard::can_run_interactive() => {
+            eprintln!("No configuration found. Let's set you up first!\n");
+            wizard::run_wizard()?
+        }
+        Err(e) => return Err(e),
+    };
+
     let text = resolve_input(args.input)?;
     let target = args.to.unwrap_or_else(|| config.default_target.clone());
 

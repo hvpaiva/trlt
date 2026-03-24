@@ -17,12 +17,8 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Command {
-    /// Initialize the trlt configuration file.
-    Init {
-        /// The default provider to use.
-        #[arg(short, long, default_value = "openai")]
-        provider: String,
-    },
+    /// Set up trlt interactively (provider, API key, defaults).
+    Init,
     /// Translate text, file, or stdin.
     Translate {
         /// Input text or file path. Reads stdin if omitted or "-".

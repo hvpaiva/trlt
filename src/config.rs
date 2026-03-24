@@ -181,6 +181,58 @@ impl Config {
     pub fn to_toml_pretty(&self) -> Result<String> {
         Ok(toml::to_string_pretty(self)?)
     }
+
+    pub fn save_with_comments(&self) -> Result<()> {
+        let dir = Self::config_dir()?;
+        std::fs::create_dir_all(&dir)?;
+        let path = Self::config_path()?;
+        let contents = self.to_commented_toml();
+        std::fs::write(&path, contents)?;
+        Ok(())
+    }
+
+    fn to_commented_toml(&self) -> String {
+        let mut out = String::new();
+
+        out.push_str(&format!("provider = \"{}\"\n", self.provider));
+        out.push_str(&format!("default_target = \"{}\"\n", self.default_target));
+
+        // OpenAI section
+        if let Some(ref c) = self.openai {
+            out.push_str(&format!(
+                "\n[openai]\napi_key = \"{}\"\nmodel = \"{}\"\n# base_url = \"{}\"  # change for Azure, LM Studio, or other compatible endpoints\n",
+                c.api_key, c.model, c.base_url
+            ));
+        } else {
+            out.push_str("\n# [openai]\n# api_key = \"sk-...\"\n# model = \"gpt-4o-mini\"\n# base_url = \"https://api.openai.com\"\n");
+        }
+
+        // Anthropic section
+        if let Some(ref c) = self.anthropic {
+            out.push_str(&format!(
+                "\n[anthropic]\napi_key = \"{}\"\nmodel = \"{}\"\n",
+                c.api_key, c.model
+            ));
+        } else {
+            out.push_str(
+                "\n# [anthropic]\n# api_key = \"sk-ant-...\"\n# model = \"claude-haiku-4-5-20251001\"\n",
+            );
+        }
+
+        // Ollama section
+        if let Some(ref c) = self.ollama {
+            out.push_str(&format!(
+                "\n[ollama]\nmodel = \"{}\"\nbase_url = \"{}\"\n",
+                c.model, c.base_url
+            ));
+        } else {
+            out.push_str(
+                "\n# [ollama]\n# model = \"llama3\"\n# base_url = \"http://localhost:11434\"\n",
+            );
+        }
+
+        out
+    }
 }
 
 #[cfg(test)]
